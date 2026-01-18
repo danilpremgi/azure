@@ -1,5 +1,7 @@
 locals {
-  dsrm_password_effective = length(trim(var.dsrm_password)) > 0 ? var.dsrm_password : var.admin_password
+  dsrm_password_effective = (
+    var.dsrm_password != null && trimspace(var.dsrm_password) != ""
+  ) ? var.dsrm_password : var.admin_password
 
   vnet_name      = "vnet-identity"
   dc_subnet_name = "snet-domaincontrollers"

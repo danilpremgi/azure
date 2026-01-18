@@ -82,8 +82,9 @@ variable "admin_password" {
 variable "dsrm_password" {
   type        = string
   description = "Directory Services Restore Mode password (sensitive). If unset, defaults to admin_password."
+  default     = null
+  nullable    = true
   sensitive   = true
-  default     = ""
 }
 
 # AD / Domain

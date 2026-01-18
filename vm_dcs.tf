@@ -85,9 +85,9 @@ resource "azurerm_windows_virtual_machine" "dc01" {
     version   = "latest"
   }
 
-  patch_mode            = "AutomaticByPlatform"
-  provision_vm_agent    = true
-  enable_automatic_updates = true
+  patch_mode                = "AutomaticByPlatform"
+  provision_vm_agent        = true
+  automatic_updates_enabled = true
 
   boot_diagnostics {
     storage_account_uri = null
@@ -125,9 +125,9 @@ resource "azurerm_windows_virtual_machine" "dc02" {
     version   = "latest"
   }
 
-  patch_mode               = "AutomaticByPlatform"
-  provision_vm_agent       = true
-  enable_automatic_updates = true
+  patch_mode                = "AutomaticByPlatform"
+  provision_vm_agent        = true
+  automatic_updates_enabled = true
 
   boot_diagnostics {
     storage_account_uri = null
