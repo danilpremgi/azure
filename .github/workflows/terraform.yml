@@ -3,9 +3,6 @@ name: Terraform Azure
 run-name: Terraform - ${{ github.event_name }} - ${{ github.ref_name }}
 
 on:
-  push:
-    branches: ["main"]
-
   pull_request:
     branches: ["main"]
 
@@ -41,10 +38,55 @@ env:
   DEPLOY_LOCATION: ${{ vars.DEPLOY_LOCATION }}
 
 jobs:
-  plan:
-    name: Terraform Plan
+  precheck:
+    name: Precheck
     runs-on: ubuntu-latest
+    steps:
+      - name: Check required variables
+        run: |
+          echo "DEPLOY_RG=$DEPLOY_RG"
+          echo "DEPLOY_LOCATION=$DEPLOY_LOCATION"
 
+          if [ -z "$DEPLOY_RG" ] || [ -z "$DEPLOY_LOCATION" ]; then
+            echo "Missing required repo variables: DEPLOY_RG and/or DEPLOY_LOCATION"
+            exit 1
+          fi
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    needs: precheck
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt
+        run: terraform fmt -check -diff -recursive
+
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    needs: precheck
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init (HCP state)
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    needs: [fmt, validate]
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -59,14 +101,8 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform format (check)
-        run: terraform fmt -check -diff -recursive
-
       - name: Terraform init (HCP state)
         run: terraform init -input=false
-
-      - name: Terraform validate
-        run: terraform validate
 
       - name: Terraform plan
         run: |
@@ -75,11 +111,10 @@ jobs:
             -var="location=$DEPLOY_LOCATION"
 
   apply:
-    name: Terraform Apply (Manual)
+    name: Apply (Manual)
     runs-on: ubuntu-latest
     needs: plan
     if: github.event_name == 'workflow_dispatch' && inputs.action == 'apply'
-
     steps:
       - name: Checkout
         uses: actions/checkout@v5
