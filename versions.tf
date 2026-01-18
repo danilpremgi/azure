@@ -1,6 +1,13 @@
 terraform {
   required_version = ">= 1.6.0"
 
+  cloud {
+    organization = "danilpremgi" 
+    workspaces { 
+      name = "azure" 
+    }
+}
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
