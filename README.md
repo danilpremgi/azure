@@ -63,7 +63,7 @@ When enabled, it will:
 
 ---
 
-## Clean up
+## Clean up2
 
 ```bash
 terraform destroy
