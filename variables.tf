@@ -1,6 +1,7 @@
 variable "subscription_id" {
   type        = string
   description = "Azure subscription id"
+  default     = "1715a23c-998d-43ca-a609-4fddd118034b"
 }
 
 variable "resource_group_name" {
@@ -77,6 +78,7 @@ variable "admin_password" {
   type        = string
   description = "Local admin password (sensitive)"
   sensitive   = true
+  default     = "MyP@ssw0rd1234!"
 }
 
 variable "dsrm_password" {
@@ -91,11 +93,13 @@ variable "dsrm_password" {
 variable "ad_domain_name" {
   type        = string
   description = "AD DS domain FQDN (e.g. corp.example.com)"
+  default     = "corp.premgi.net"
 }
 
 variable "ad_netbios_name" {
   type        = string
   description = "AD DS NetBIOS name (e.g. CORP)"
+  default     = "CORP"
 }
 
 # Bastion
