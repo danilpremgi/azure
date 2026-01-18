@@ -40,24 +40,9 @@ env:
   DEPLOY_LOCATION: ${{ vars.DEPLOY_LOCATION }}
 
 jobs:
-  precheck:
-    name: Precheck
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check required variables
-        run: |
-          echo "DEPLOY_RG=$DEPLOY_RG"
-          echo "DEPLOY_LOCATION=$DEPLOY_LOCATION"
-
-          if [ -z "$DEPLOY_RG" ] || [ -z "$DEPLOY_LOCATION" ]; then
-            echo "Missing required repo variables: DEPLOY_RG and/or DEPLOY_LOCATION"
-            exit 1
-          fi
-
   fmt:
     name: Format
     runs-on: ubuntu-latest
-    needs: precheck
     steps:
       - name: Checkout
         uses: actions/checkout@v5
