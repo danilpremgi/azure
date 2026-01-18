@@ -50,12 +50,12 @@ jobs:
       - name: Terraform plan
         run: |
           terraform plan -input=false \
-            -var="deploy_rg_name=${{ vars.DEPLOY_RG }}" \
+            -var="deploy_rg_name=${{ vars.resource_group_name }}" \
             -var="location=${{ vars.DEPLOY_LOCATION }}"
 
       - name: Terraform apply
         if: github.event.action == 'closed' && github.event.pull_request.merged == true
         run: |
           terraform apply -auto-approve -input=false \
-            -var="deploy_rg_name=${{ vars.DEPLOY_RG }}" \
+            -var="deploy_rg_name=${{ vars.resource_group_name }}" \
             -var="location=${{ vars.DEPLOY_LOCATION }}"
