@@ -3,6 +3,8 @@ name: Terraform Azure
 run-name: Terraform - ${{ github.event_name }} - ${{ github.ref_name }}
 
 on:
+  push:
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
