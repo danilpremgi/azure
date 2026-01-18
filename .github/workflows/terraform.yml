@@ -5,8 +5,10 @@ run-name: Terraform - ${{ github.event_name }} - ${{ github.ref_name }}
 on:
   push:
     branches: ["main"]
+
   pull_request:
     branches: ["main"]
+
   workflow_dispatch:
     inputs:
       action:
@@ -39,11 +41,15 @@ env:
   DEPLOY_LOCATION: ${{ vars.DEPLOY_LOCATION }}
 
 jobs:
-  precheck:
-    name: Precheck
+  plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check required variables
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Precheck variables
         run: |
           echo "DEPLOY_RG=$DEPLOY_RG"
           echo "DEPLOY_LOCATION=$DEPLOY_LOCATION"
@@ -53,85 +59,24 @@ jobs:
             exit 1
           fi
 
-  fmt:
-    name: Terraform Format
-    runs-on: ubuntu-latest
-    needs: precheck
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform fmt (check)
+      - name: Terraform format (check)
         run: terraform fmt -check -diff -recursive
-
-  init:
-    name: Terraform Init
-    runs-on: ubuntu-latest
-    needs: fmt
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform init (HCP state)
-        run: terraform init -input=false
-
-  validate:
-    name: Terraform Validate
-    runs-on: ubuntu-latest
-    needs: init
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
 
       - name: Terraform init (HCP state)
         run: terraform init -input=false
 
       - name: Terraform validate
         run: terraform validate
-
-  plan:
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform init (HCP state)
-        run: terraform init -input=false
 
       - name: Terraform plan
         run: |
@@ -144,6 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: plan
     if: github.event_name == 'workflow_dispatch' && inputs.action == 'apply'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
