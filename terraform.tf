@@ -1,8 +1,8 @@
 terraform {
+  required_version = "~> 3.0.2"
 
   cloud {
     organization = "danilpremgi"
-
     workspaces {
       name = "azure"
     }
