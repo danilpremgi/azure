@@ -13,6 +13,7 @@ on:
       - "**/*.tfvars"
       - "**/.terraform.lock.hcl"
       - ".github/workflows/terraform.yml"
+      - ".tflint.hcl"
 
   workflow_dispatch:
     inputs:
@@ -56,12 +57,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Precheck repo variables
+        run: |
+          echo "DEPLOY_RG=$DEPLOY_RG"
+          echo "DEPLOY_LOCATION=$DEPLOY_LOCATION"
+
+          if [ -z "$DEPLOY_RG" ] || [ -z "$DEPLOY_LOCATION" ]; then
+            echo "Missing required repo variables: DEPLOY_RG and/or DEPLOY_LOCATION"
+            exit 1
+          fi
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -85,6 +89,42 @@ jobs:
 
       - name: Terraform validate
         run: terraform validate
+
+      # --------------------
+      # Linting (TFLint)
+      # --------------------
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+
+      - name: Cache TFLint plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-tflint-
+
+      - name: TFLint init
+        run: tflint --init
+
+      - name: TFLint run
+        run: tflint --recursive -f compact
+
+      # --------------------
+      # Optional security scan (tfsec)
+      # --------------------
+      - name: tfsec scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+
+      # --------------------
+      # Azure auth + plan/apply
+      # --------------------
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform plan
         run: |
