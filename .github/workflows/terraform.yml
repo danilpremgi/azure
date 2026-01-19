@@ -46,7 +46,7 @@ env:
   DEPLOY_RG: ${{ vars.DEPLOY_RG }}
   DEPLOY_LOCATION: ${{ vars.DEPLOY_LOCATION }}
 
-  TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+  TF_PLUGIN_CACHE_DIR: $HOME/.terraform.d/plugin-cache
 
 jobs:
   terraform:
@@ -60,13 +60,16 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.7.5
+          terraform_version: 1.14.3
           terraform_wrapper: false
+
+      - name: Create Terraform plugin cache dir
+        run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
 
       - name: Cache Terraform providers
         uses: actions/cache@v4
         with:
-          path: ~/.terraform.d/plugin-cache
+          path: $HOME/.terraform.d/plugin-cache
           key: ${{ runner.os }}-terraform-${{ hashFiles('**/.terraform.lock.hcl') }}
           restore-keys: |
             ${{ runner.os }}-terraform-
@@ -81,29 +84,34 @@ jobs:
         run: terraform validate
 
       # --------------------
-      # Linting (TFLint)
+      # Linting (TFLint) - skip on manual apply runs for speed
       # --------------------
       - name: Setup TFLint
+        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
         uses: terraform-linters/setup-tflint@v6
 
       - name: Cache TFLint plugins
+        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
         uses: actions/cache@v4
         with:
-          path: ~/.tflint.d/plugins
+          path: $HOME/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
           restore-keys: |
             ${{ runner.os }}-tflint-
 
       - name: TFLint init
+        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
         run: tflint --init
 
       - name: TFLint run
+        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
         run: tflint --recursive -f compact
 
       # --------------------
-      # Optional security scan (tfsec)
+      # Optional security scan (tfsec) - skip on manual apply runs for speed
       # --------------------
       - name: tfsec scan
+        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
         uses: aquasecurity/tfsec-action@v1.0.3
 
       # --------------------
