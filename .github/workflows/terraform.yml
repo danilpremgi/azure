@@ -87,11 +87,11 @@ jobs:
       # Linting (TFLint) - skip on manual apply runs for speed
       # --------------------
       - name: Setup TFLint
-        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
+        if: github.event_name != 'workflow_dispatch' || inputs.action != 'apply'
         uses: terraform-linters/setup-tflint@v6
 
       - name: Cache TFLint plugins
-        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
+        if: github.event_name != 'workflow_dispatch' || inputs.action != 'apply'
         uses: actions/cache@v4
         with:
           path: $HOME/.tflint.d/plugins
@@ -100,18 +100,15 @@ jobs:
             ${{ runner.os }}-tflint-
 
       - name: TFLint init
-        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
+        if: github.event_name != 'workflow_dispatch' || inputs.action != 'apply'
         run: tflint --init
 
       - name: TFLint run
-        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
+        if: github.event_name != 'workflow_dispatch' || inputs.action != 'apply'
         run: tflint --recursive -f compact
 
-      # --------------------
-      # Optional security scan (tfsec) - skip on manual apply runs for speed
-      # --------------------
       - name: tfsec scan
-        if: !(github.event_name == 'workflow_dispatch' && inputs.action == 'apply')
+        if: github.event_name != 'workflow_dispatch' || inputs.action != 'apply'
         uses: aquasecurity/tfsec-action@v1.0.3
 
       # --------------------
