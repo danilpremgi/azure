@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  terraform:
+  deploying:
     runs-on: ubuntu-latest
 
     defaults:
