@@ -43,6 +43,7 @@ resource "azurerm_managed_disk" "dc01_data" {
   storage_account_type = "Premium_LRS"
   create_option        = "Empty"
   disk_size_gb         = 64
+  zone                 = each.value.zone
   tags                 = var.tags
 }
 
@@ -53,6 +54,7 @@ resource "azurerm_managed_disk" "dc02_data" {
   storage_account_type = "Premium_LRS"
   create_option        = "Empty"
   disk_size_gb         = 64
+  zone                 = each.value.zone
   tags                 = var.tags
 }
 
